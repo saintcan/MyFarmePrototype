@@ -3,17 +3,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "MyFarmePrototypeCharacter.generated.h"
 
 UCLASS(Blueprintable)
-class AMyFarmePrototypeCharacter : public ACharacter
+class AMyFarmePrototypeCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
 	AMyFarmePrototypeCharacter();
 
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void UnPossessed() override;
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;
 

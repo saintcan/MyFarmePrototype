@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MyFarmePrototypeCharacter.h"
+#include "AbilitySystemComponent.h"
+#include "GASInstallPlayerState.h" 
 #include "UObject/ConstructorHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
@@ -48,4 +50,30 @@ AMyFarmePrototypeCharacter::AMyFarmePrototypeCharacter()
 void AMyFarmePrototypeCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+}
+UAbilitySystemComponent* AMyFarmePrototypeCharacter::GetAbilitySystemComponent()const
+{
+	if (const AGASInstallPlayerState* GASInstallPlayerState = GetPlayerState<AGASInstallPlayerState>())
+	{
+		return GASInstallPlayerState->GetAbilitySystemComponent();
+	}
+	return nullptr;
+}
+void AMyFarmePrototypeCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (const AGASInstallPlayerState* AGASInstallPlayerStateState = NewController->GetPlayerState<AGASInstallPlayerState>())
+	{
+		AGASInstallPlayerStateState->GetAbilitySystemComponent()->SetAvatarActor(this);
+	}
+}
+void AMyFarmePrototypeCharacter::UnPossessed()
+{
+	Super::UnPossessed();
+
+	if (const AGASInstallPlayerState* AGASInstallPlayerStateState = GetPlayerState<AGASInstallPlayerState>())
+	{
+		AGASInstallPlayerStateState->GetAbilitySystemComponent()->SetAvatarActor(nullptr);
+	}
 }

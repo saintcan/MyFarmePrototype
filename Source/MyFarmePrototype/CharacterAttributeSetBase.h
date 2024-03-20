@@ -19,19 +19,11 @@ class MYFARMEPROTOTYPE_API UCharacterAttributeSetBase : public UAttributeSet
 public:
     UCharacterAttributeSetBase();
 
-    UPROPERTY(BlueprintReadOnly, Category = "Health")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
     FGameplayAttributeData Health;
     ATTRIBUTE_ACCESSORS(UCharacterAttributeSetBase, Health)
 
-        UPROPERTY(BlueprintReadOnly, Category = "Health")
-    FGameplayAttributeData MaxHealth;
-    ATTRIBUTE_ACCESSORS(UCharacterAttributeSetBase, MaxHealth)
-
-        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
+        UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina")
     FGameplayAttributeData Stamina;
     ATTRIBUTE_ACCESSORS(UCharacterAttributeSetBase, Stamina)
-
-        UPROPERTY(BlueprintReadOnly, Category = "Stamina")
-    FGameplayAttributeData MaxStamina;
-    ATTRIBUTE_ACCESSORS(UCharacterAttributeSetBase, MaxStamina)
 };

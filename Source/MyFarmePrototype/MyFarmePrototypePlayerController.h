@@ -1,8 +1,8 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InventoryItem.h"
+#include "Interactable.h"
 #include "Templates/SubclassOf.h"
 #include "GameFramework/PlayerController.h"
 #include "MyFarmePrototypePlayerController.generated.h"
@@ -22,6 +22,30 @@ class AMyFarmePrototypePlayerController : public APlayerController
 public:
 	AMyFarmePrototypePlayerController();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ReloadInventory();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	int32 GetInventoryWeight();
+
+	UFUNCTION(BlueprintCallable, Category = "Utils")
+	bool AddItemToInventoryByID(FName ID);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	AInteractable* CurrentInteractable;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TArray<FInventoryItem> Inventory;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	int32 Money;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 InventorySlotLimit;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 InventoryWeightLimit;
+
 	/** Time Threshold to know if it was a short press */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	float ShortPressThreshold;
@@ -31,25 +55,27 @@ public:
 	UNiagaraSystem* FXCursor;
 
 	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
-	
+
 	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SetDestinationClickAction;
 
 	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SetDestinationTouchAction;
 
 protected:
+	void Interact();
+
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
 	virtual void SetupInputComponent() override;
-	
+
 	// To add mapping context
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 	/** Input handlers for SetDestination action. */
 	void OnInputStarted();
@@ -64,5 +90,3 @@ private:
 	bool bIsTouch; // Is it a touch device
 	float FollowTime; // For how long it has been pressed
 };
-
-

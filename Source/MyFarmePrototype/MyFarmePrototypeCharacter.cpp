@@ -1,6 +1,9 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MyFarmePrototypeCharacter.h"
+#include "MyFarmePrototypePlayerController.h"
+#include "Interactable.h"
+#include "InventoryItem.h"
 #include "AbilitySystemComponent.h"
 #include "GASInstallPlayerState.h" 
 #include "UObject/ConstructorHelpers.h"
@@ -22,6 +25,11 @@ AMyFarmePrototypeCharacter::AMyFarmePrototypeCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+
+	// Create the collection sphere
+	CollectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollectionSphere"));
+	CollectionSphere->SetupAttachment(RootComponent);
+	CollectionSphere->SetSphereRadius(200.f);
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Rotate character to moving direction
@@ -47,9 +55,11 @@ AMyFarmePrototypeCharacter::AMyFarmePrototypeCharacter()
 	PrimaryActorTick.bStartWithTickEnabled = true;
 }
 
-void AMyFarmePrototypeCharacter::Tick(float DeltaSeconds)
+void AMyFarmePrototypeCharacter::Tick(float Deltatime)
 {
-    Super::Tick(DeltaSeconds);
+	Super::Tick(Deltatime);
+
+	CheckForInteractables();
 }
 UAbilitySystemComponent* AMyFarmePrototypeCharacter::GetAbilitySystemComponent()const
 {
@@ -75,5 +85,37 @@ void AMyFarmePrototypeCharacter::UnPossessed()
 	if (const AGASInstallPlayerState* AGASInstallPlayerStateState = GetPlayerState<AGASInstallPlayerState>())
 	{
 		AGASInstallPlayerStateState->GetAbilitySystemComponent()->SetAvatarActor(nullptr);
+	}
+}
+void AMyFarmePrototypeCharacter::CheckForInteractables()
+{
+	// Create a LineTrace to check for a hit
+	FHitResult HitResult;
+
+	int32 Range = 500;
+	FVector StartTrace = TopDownCameraComponent->GetComponentLocation();
+	FVector EndTrace = (TopDownCameraComponent->GetForwardVector() * Range) + StartTrace;
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	AMyFarmePrototypePlayerController* IController = Cast<AMyFarmePrototypePlayerController>(GetController());
+
+	if (IController)
+	{
+		// Check if something is hit
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, StartTrace, EndTrace, ECC_Visibility, QueryParams))
+		{
+			// Cast the actor to AInteractable
+			AInteractable* Interactable = Cast<AInteractable>(HitResult.GetActor());
+			// If the cast is successful
+			if (Interactable)
+			{
+				IController->CurrentInteractable = Interactable;
+				return;
+			}
+		}
+
+		IController->CurrentInteractable = nullptr;
 	}
 }

@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MyFarmePrototypePlayerController.h"
+#include "MyFarmePrototypeGameState.h"
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "NiagaraSystem.h"
@@ -11,11 +12,14 @@
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/LocalPlayer.h"
+#include "InventoryItem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 AMyFarmePrototypePlayerController::AMyFarmePrototypePlayerController()
 {
+	InventorySlotLimit = 50;
+	InventoryWeightLimit = 500;
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
 	CachedDestination = FVector::ZeroVector;
@@ -36,8 +40,6 @@ void AMyFarmePrototypePlayerController::BeginPlay()
 
 void AMyFarmePrototypePlayerController::SetupInputComponent()
 {
-	// set up gameplay key bindings
-	Super::SetupInputComponent();
 
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(InputComponent))
@@ -70,7 +72,7 @@ void AMyFarmePrototypePlayerController::OnSetDestinationTriggered()
 {
 	// We flag that the input is being pressed
 	FollowTime += GetWorld()->GetDeltaSeconds();
-	
+
 	// We look for the location in the world where the player has pressed the input
 	FHitResult Hit;
 	bool bHitSuccessful = false;
@@ -88,7 +90,7 @@ void AMyFarmePrototypePlayerController::OnSetDestinationTriggered()
 	{
 		CachedDestination = Hit.Location;
 	}
-	
+
 	// Move towards mouse pointer or touch
 	APawn* ControlledPawn = GetPawn();
 	if (ControlledPawn != nullptr)
@@ -122,4 +124,41 @@ void AMyFarmePrototypePlayerController::OnTouchReleased()
 {
 	bIsTouch = false;
 	OnSetDestinationReleased();
+}
+
+int32 AMyFarmePrototypePlayerController::GetInventoryWeight()
+{
+	int32 Weight = 0;
+	for (auto& Item : Inventory)
+	{
+		Weight += Item.Weight;
+	}
+
+	return Weight;
+}
+
+bool AMyFarmePrototypePlayerController::AddItemToInventoryByID(FName ID)
+{
+	AMyFarmePrototypeGameState* GameState = Cast<AMyFarmePrototypeGameState>(GetWorld()->GetGameState());
+	UDataTable* ItemTable = GameState->GetItemDB();
+	FInventoryItem* ItemToAdd = ItemTable->FindRow<FInventoryItem>("ItemID", "");
+
+	if (ItemToAdd)
+	{
+		// If a Slot- or WeightLimit are not needed remove them in this line
+		if (Inventory.Num() < InventorySlotLimit && GetInventoryWeight() + ItemToAdd->Weight <= InventoryWeightLimit)
+		{
+			Inventory.Add(*ItemToAdd);
+			return true;
+		}
+	}
+	return false;
+}
+
+void AMyFarmePrototypePlayerController::Interact()
+{
+	if (CurrentInteractable)
+	{
+		CurrentInteractable->Interact(this);
+	}
 }
